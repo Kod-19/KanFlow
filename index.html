@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KanFlow - Modern Kanban Board</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="header-title-section">
+                <div class="logo">
+                    <span class="logo-icon">📋</span>
+                    <h1>KanFlow</h1>
+                </div>
+                <p class="tagline">Drag & drop tasks to track your workflow</p>
+            </div>
+            <div class="header-actions">
+                <button id="view-trash-btn" class="trash-btn">
+                    <span class="trash-icon-small">🗑️</span>
+                    <span class="trash-count">0</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Instructions Bar -->
+        <div class="instructions-bar">
+            <div class="instruction">
+                <span class="instruction-icon">✏️</span>
+                <span>Click "Add Card" to create tasks</span>
+            </div>
+            <div class="instruction">
+                <span class="instruction-icon">🖱️</span>
+                <span>Drag cards between columns</span>
+            </div>
+            <div class="instruction">
+                <span class="instruction-icon">🗑️</span>
+                <span>Drag to trash bin or click × to delete</span>
+            </div>
+        </div>
+
+        <!-- Kanban Columns -->
+        <div class="columns">
+            <!-- To Do Column -->
+            <div class="column" id="todo-column">
+                <div class="column-header">
+                    <div class="column-title-section">
+                        <span class="column-icon">📝</span>
+                        <h2>To Do</h2>
+                        <span class="card-count-badge" id="todo-count">0</span>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="todo-progress">
+                                <div class="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="progress-text" id="todo-progress-text">0%</div>
+                    </div>
+                </div>
+                <div class="column-content" id="todo-content">
+                    <div class="empty-state">
+                        <span class="empty-icon">✨</span>
+                        <p>No tasks yet. Click "Add Card" to get started!</p>
+                    </div>
+                </div>
+                <button class="add-card" onclick="showAddCardPrompt('todo')">
+                    <span>+</span> Add Card
+                </button>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="column" id="inprogress-column">
+                <div class="column-header">
+                    <div class="column-title-section">
+                        <span class="column-icon">⚡</span>
+                        <h2>In Progress</h2>
+                        <span class="card-count-badge" id="inprogress-count">0</span>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="inprogress-progress">
+                                <div class="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="progress-text" id="inprogress-progress-text">0%</div>
+                    </div>
+                </div>
+                <div class="column-content" id="inprogress-content">
+                    <div class="empty-state">
+                        <span class="empty-icon">🚀</span>
+                        <p>No tasks in progress. Drag a task here!</p>
+                    </div>
+                </div>
+                <button class="add-card" onclick="showAddCardPrompt('inprogress')">
+                    <span>+</span> Add Card
+                </button>
+            </div>
+
+            <!-- Done Column -->
+            <div class="column" id="done-column">
+                <div class="column-header">
+                    <div class="column-title-section">
+                        <span class="column-icon">✅</span>
+                        <h2>Done</h2>
+                        <span class="card-count-badge" id="done-count">0</span>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="done-progress">
+                                <div class="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="progress-text" id="done-progress-text">0%</div>
+                    </div>
+                </div>
+                <div class="column-content" id="done-content">
+                    <div class="empty-state">
+                        <span class="empty-icon">🏆</span>
+                        <p>Completed tasks will appear here!</p>
+                    </div>
+                </div>
+                <button class="add-card" onclick="showAddCardPrompt('done')">
+                    <span>+</span> Add Card
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trash Drop Zone -->
+    <div class="trash-drop-zone" id="trash-drop-zone">
+        <div class="trash-icon">🗑️</div>
+        <p>Drop here to delete</p>
+    </div>
+
+    <!-- Trash Page -->
+    <div id="trash-page" class="trash-page">
+        <div class="trash-page-container">
+            <div class="trash-page-header">
+                <div class="trash-title-section">
+                    <span class="trash-icon-large">🗑️</span>
+                    <h1>Deleted Items</h1>
+                </div>
+                <button id="back-from-trash" class="back-btn">← Back to Board</button>
+            </div>
+            <div class="trash-page-content">
+                <p class="trash-description">Items stay here until you permanently delete them. You can restore items back to any column.</p>
+                <div id="trash-page-items" class="trash-page-items"></div>
+            </div>
+            <div class="trash-page-footer">
+                <button id="empty-trash-page-btn" class="trash-empty-btn">🗑️ Empty Trash Permanently</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Card Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>➕ Create New Task</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <label for="card-input">Task Title</label>
+                <input type="text" id="card-input" placeholder="e.g., Complete project report, Review pull request..." autocomplete="off">
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-modal" class="cancel-btn">Cancel</button>
+                <button id="save-card" class="save-btn">Create Task</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
