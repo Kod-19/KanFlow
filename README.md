@@ -20,6 +20,9 @@ A modern, interactive drag-and-drop Kanban board web application built with vani
 - Prominent yellow trash drop zone at the bottom of the page
 - Easy-to-use modal dialogs for card creation
 
+### Deployment link
+**Link** - https://kan-flow-ivory.vercel.app/
+
 ## How to Use
 
 ### Getting Started
