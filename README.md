@@ -1,4 +1,4 @@
-# Kanban Todo List App
+# KanFlow - A modernized Kanban Todo List App
 
 A modern, interactive drag-and-drop Kanban board web application built with vanilla HTML, CSS, and JavaScript. This app helps you organize and manage your tasks across three workflow stages: To Do, In Progress, and Done.
 
