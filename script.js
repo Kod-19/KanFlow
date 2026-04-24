@@ -35,6 +35,15 @@ let trashItems = [];
 let currentColumn = null;
 let draggedElement = null;
 
+// Touch drag state for mobile
+let touchStartX = 0;
+let touchStartY = 0;
+let touchDraggedCard = null;
+let touchDragActive = false;
+let touchClone = null;
+let touchCurrentColumn = null;
+let touchDropTarget = null;
+
 // ==================== Helper Functions ====================
 
 function updateColumnCounters() {
@@ -73,7 +82,6 @@ function updateProgressBars() {
 }
 
 function updateEmptyStates() {
-    // Update empty state for each column
     updateColumnEmptyState(todoColumn, '✨', 'No tasks yet. Click "Add Card" to get started!');
     updateColumnEmptyState(inprogressColumn, '🚀', 'No tasks in progress. Drag a task here!');
     updateColumnEmptyState(doneColumn, '🏆', 'Completed tasks will appear here!');
@@ -152,9 +160,15 @@ function loadState() {
 // ==================== Card Functions ====================
 
 function attachCardEvents(card) {
+    // Mouse events for desktop
     card.setAttribute('draggable', 'true');
     card.addEventListener('dragstart', dragStart);
     card.addEventListener('dragend', dragEnd);
+    
+    // Touch events for mobile
+    card.addEventListener('touchstart', touchDragStart, { passive: false });
+    card.addEventListener('touchmove', touchDragMove, { passive: false });
+    card.addEventListener('touchend', touchDragEnd);
     
     // Ensure delete button exists and has correct event
     let deleteBtn = card.querySelector('.card-delete-btn');
@@ -232,7 +246,7 @@ function deleteCard(cardElement, columnId) {
     updateTrashPageDisplay();
 }
 
-// ==================== Drag & Drop ====================
+// ==================== Desktop Drag & Drop ====================
 
 function dragStart(e) {
     draggedElement = e.target.closest('.card');
@@ -297,6 +311,131 @@ function makeTrashZoneDroppable() {
             if (column) deleteCard(draggedElement, column);
         }
     });
+}
+
+// ==================== Mobile Touch Drag & Drop ====================
+
+function touchDragStart(e) {
+    e.preventDefault();
+    const card = e.target.closest('.card');
+    if (!card) return;
+    
+    // Don't start drag if delete button was tapped
+    if (e.target.classList.contains('card-delete-btn')) return;
+    
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchDraggedCard = card;
+    touchDragActive = true;
+    touchCurrentColumn = findCardColumn(card);
+    
+    // Add dragging class and create clone for visual feedback
+    card.classList.add('dragging');
+    
+    // Create a clone of the card for visual feedback during drag
+    touchClone = card.cloneNode(true);
+    touchClone.style.position = 'fixed';
+    touchClone.style.top = `${touchStartY}px`;
+    touchClone.style.left = `${touchStartX}px`;
+    touchClone.style.width = `${card.offsetWidth}px`;
+    touchClone.style.opacity = '0.8';
+    touchClone.style.pointerEvents = 'none';
+    touchClone.style.zIndex = '9999';
+    touchClone.style.transform = 'translate(-50%, -50%)';
+    touchClone.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
+    document.body.appendChild(touchClone);
+    
+    // Hide original card but keep its space
+    card.style.opacity = '0.3';
+    
+    // Add visual indicators for drop targets
+    document.querySelectorAll('.column-content').forEach(col => {
+        col.classList.add('drag-target-ready');
+    });
+    document.getElementById('trash-drop-zone').classList.add('drag-target-ready');
+}
+
+function touchDragMove(e) {
+    if (!touchDragActive || !touchDraggedCard) return;
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    const currentX = touch.clientX;
+    const currentY = touch.clientY;
+    
+    // Move the clone
+    if (touchClone) {
+        touchClone.style.top = `${currentY}px`;
+        touchClone.style.left = `${currentX}px`;
+    }
+    
+    // Find drop target under finger
+    const elementAtCursor = document.elementFromPoint(currentX, currentY);
+    const columnContent = elementAtCursor?.closest('.column-content');
+    const trashZone = elementAtCursor?.closest('#trash-drop-zone');
+    
+    // Remove highlight from all targets
+    document.querySelectorAll('.column-content, #trash-drop-zone').forEach(el => {
+        el.classList.remove('drag-over');
+    });
+    
+    // Add highlight to current target
+    if (columnContent) {
+        columnContent.classList.add('drag-over');
+        touchDropTarget = columnContent;
+    } else if (trashZone) {
+        trashZone.classList.add('drag-over');
+        touchDropTarget = trashZone;
+    } else {
+        touchDropTarget = null;
+    }
+}
+
+function touchDragEnd(e) {
+    if (!touchDragActive || !touchDraggedCard) return;
+    e.preventDefault();
+    
+    // Clean up clone
+    if (touchClone) {
+        touchClone.remove();
+        touchClone = null;
+    }
+    
+    // Reset original card appearance
+    touchDraggedCard.style.opacity = '1';
+    touchDraggedCard.classList.remove('dragging');
+    
+    // Process drop if there's a valid target
+    if (touchDropTarget) {
+        const isTrashZone = touchDropTarget.id === 'trash-drop-zone';
+        
+        if (isTrashZone) {
+            // Delete the card
+            if (touchCurrentColumn) {
+                deleteCard(touchDraggedCard, touchCurrentColumn);
+            }
+        } else {
+            // Move to new column
+            const targetColumn = touchDropTarget.closest('.column');
+            if (targetColumn) {
+                touchDropTarget.appendChild(touchDraggedCard);
+                saveState();
+                updateProgressBars();
+            }
+        }
+    }
+    
+    // Remove visual indicators
+    document.querySelectorAll('.column-content, #trash-drop-zone').forEach(el => {
+        el.classList.remove('drag-over', 'drag-target-ready');
+    });
+    
+    // Reset state
+    touchDraggedCard = null;
+    touchDragActive = false;
+    touchCurrentColumn = null;
+    touchDropTarget = null;
 }
 
 // ==================== Trash Functions ====================
@@ -411,11 +550,17 @@ function closeModal() {
 // ==================== Initialization ====================
 
 function init() {
-    // Make columns droppable
+    // Make columns droppable for desktop
     makeColumnDroppable(todoColumn, 'todo');
     makeColumnDroppable(inprogressColumn, 'inprogress');
     makeColumnDroppable(doneColumn, 'done');
     makeTrashZoneDroppable();
+    
+    // Make columns touch-friendly (add padding to make drop areas larger)
+    document.querySelectorAll('.column-content').forEach(column => {
+        column.style.minHeight = '200px';
+        column.style.padding = '8px';
+    });
     
     // Load saved data
     loadState();
@@ -457,6 +602,15 @@ function init() {
             updateTrashPageDisplay();
         }
     };
+    
+    // Prevent default touchmove on body to avoid page scroll while dragging
+    document.body.addEventListener('touchmove', function(e) {
+        if (touchDragActive) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    
+    console.log('KanFlow initialized - Drag & drop works on both desktop and mobile!');
 }
 
 // Start the app
