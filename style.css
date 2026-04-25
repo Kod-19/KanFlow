@@ -143,7 +143,7 @@ body {
 
 .column {
     flex: 1;
-    min-width: 280px;
+    min-width: 300px;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
@@ -153,6 +153,8 @@ body {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     border: 1px solid rgba(255, 255, 255, 0.3);
+    height: calc(100vh - 200px);
+    min-height: 400px;
 }
 
 .column:hover {
@@ -162,7 +164,8 @@ body {
 
 /* Column Header */
 .column-header {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
 }
 
 .column-title-section {
@@ -228,13 +231,39 @@ body {
     min-width: 45px;
 }
 
-/* Column Content */
+/* Scrollable Column Content */
 .column-content {
-    min-height: 300px;
-    max-height: calc(100vh - 250px);
+    flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     margin-bottom: 1rem;
-    padding: 0.25rem;
+    padding: 0.25rem 0.25rem 0.5rem 0.25rem;
+    min-height: 200px;
+}
+
+/* Custom Scrollbar for Column Content */
+.column-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.column-content::-webkit-scrollbar-track {
+    background: #e9ecef;
+    border-radius: 10px;
+}
+
+.column-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 10px;
+}
+
+.column-content::-webkit-scrollbar-thumb:hover {
+    background: #5a67d8;
+}
+
+/* Firefox scrollbar */
+.column-content {
+    scrollbar-width: thin;
+    scrollbar-color: #667eea #e9ecef;
 }
 
 /* Empty State */
@@ -263,10 +292,17 @@ body {
     padding: 1rem;
     margin-bottom: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    cursor: grab;
     transition: all 0.25s ease;
     position: relative;
     border: 1px solid #e9ecef;
+    cursor: grab;
+}
+
+/* Disable grab cursor on mobile to prevent confusion with scrolling */
+@media (max-width: 768px) {
+    .card {
+        cursor: default;
+    }
 }
 
 .card:active {
@@ -319,6 +355,16 @@ body {
     opacity: 0.7;
 }
 
+/* Make delete button easier to tap on mobile */
+@media (max-width: 768px) {
+    .card-delete-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1.5rem;
+        opacity: 1;
+    }
+}
+
 .card-delete-btn:hover {
     background: #dc3545;
     color: white;
@@ -343,7 +389,7 @@ body {
     justify-content: center;
     gap: 0.5rem;
     transition: all 0.3s ease;
-    margin-top: auto;
+    flex-shrink: 0;
 }
 
 .add-card:hover {
@@ -619,6 +665,26 @@ body {
     overflow-y: auto;
 }
 
+/* Scrollable trash items */
+.scrollable-trash {
+    overflow-y: auto;
+    max-height: 500px;
+}
+
+.trash-page-items::-webkit-scrollbar {
+    width: 6px;
+}
+
+.trash-page-items::-webkit-scrollbar-track {
+    background: #e9ecef;
+    border-radius: 10px;
+}
+
+.trash-page-items::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 10px;
+}
+
 .trash-item-card {
     display: flex;
     justify-content: space-between;
@@ -729,26 +795,6 @@ body {
     border-radius: 12px;
 }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #e9ecef;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #5a67d8;
-}
-
 /* Responsive Design */
 @media (max-width: 1024px) {
     body {
@@ -760,7 +806,9 @@ body {
     }
     
     .column {
-        min-width: 260px;
+        min-width: 280px;
+        height: calc(100vh - 180px);
+        min-height: 350px;
     }
 }
 
@@ -789,14 +837,19 @@ body {
     
     .columns {
         flex-direction: column;
+        overflow-x: visible;
     }
     
     .column {
         min-width: auto;
+        height: auto;
+        max-height: 500px;
+        min-height: 300px;
     }
     
     .column-content {
         max-height: 300px;
+        min-height: 200px;
     }
     
     .trash-drop-zone {
@@ -850,6 +903,11 @@ body {
     
     .column {
         padding: 1rem;
+        max-height: 450px;
+    }
+    
+    .column-content {
+        max-height: 250px;
     }
     
     .card h3 {
@@ -869,10 +927,16 @@ body {
     }
 }
 
-/* Touch Device Optimization */
-@media (hover: none) {
+/* Touch Device Optimization - Disable drag visual effects on mobile */
+@media (hover: none) and (pointer: coarse) {
     .card {
         cursor: default;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .card:hover {
+        transform: none;
     }
     
     .trash-drop-zone {
@@ -885,5 +949,11 @@ body {
     
     .trash-btn:hover {
         transform: none;
+    }
+    
+    /* Ensure scrolling works smoothly on mobile */
+    .column-content {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
     }
 }

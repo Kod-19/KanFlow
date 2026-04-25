@@ -7,7 +7,6 @@
     <title>KanFlow - Modern Kanban Board</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <link rel="icon" href="favicon.png" type="image/x-icon">
 </head>
 
 <body>
@@ -37,11 +36,15 @@
             </div>
             <div class="instruction">
                 <span class="instruction-icon">🖱️</span>
-                <span>Drag cards between columns</span>
+                <span>Drag cards between columns (desktop)</span>
+            </div>
+            <div class="instruction">
+                <span class="instruction-icon">📱</span>
+                <span>Scroll to see all tasks (mobile)</span>
             </div>
             <div class="instruction">
                 <span class="instruction-icon">🗑️</span>
-                <span>Drag to trash bin or click × to delete</span>
+                <span>Click × to delete</span>
             </div>
         </div>
 
@@ -64,7 +67,7 @@
                         <div class="progress-text" id="todo-progress-text">0%</div>
                     </div>
                 </div>
-                <div class="column-content" id="todo-content">
+                <div class="column-content scrollable" id="todo-content">
                     <div class="empty-state">
                         <span class="empty-icon">✨</span>
                         <p>No tasks yet. Click "Add Card" to get started!</p>
@@ -92,7 +95,7 @@
                         <div class="progress-text" id="inprogress-progress-text">0%</div>
                     </div>
                 </div>
-                <div class="column-content" id="inprogress-content">
+                <div class="column-content scrollable" id="inprogress-content">
                     <div class="empty-state">
                         <span class="empty-icon">🚀</span>
                         <p>No tasks in progress. Drag a task here!</p>
@@ -120,7 +123,7 @@
                         <div class="progress-text" id="done-progress-text">0%</div>
                     </div>
                 </div>
-                <div class="column-content" id="done-content">
+                <div class="column-content scrollable" id="done-content">
                     <div class="empty-state">
                         <span class="empty-icon">🏆</span>
                         <p>Completed tasks will appear here!</p>
@@ -151,7 +154,7 @@
             </div>
             <div class="trash-page-content">
                 <p class="trash-description">Items stay here until you permanently delete them. You can restore items back to any column.</p>
-                <div id="trash-page-items" class="trash-page-items"></div>
+                <div id="trash-page-items" class="trash-page-items scrollable-trash"></div>
             </div>
             <div class="trash-page-footer">
                 <button id="empty-trash-page-btn" class="trash-empty-btn">🗑️ Empty Trash Permanently</button>
