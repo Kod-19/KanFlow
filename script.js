@@ -228,7 +228,7 @@ function updateInstructions() {
                 </div>
                 <div class="mobile-instruction">
                     <span class="instruction-icon">✖️</span>
-                    <span class="instruction-text">Tap the × button to delete a task</span>
+                    <span class="instruction-text">Tap the × button or drag to the trash at the bottom to delete a task</span>
                 </div>
                 <div class="mobile-instruction">
                     <span class="instruction-icon">📜</span>
