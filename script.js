@@ -160,6 +160,85 @@ function loadState() {
     updateTrashPageDisplay();
 }
 
+// ==================== Context-Aware Instructions ====================
+
+function updateInstructions() {
+    const instructionsBar = document.getElementById('instructions-bar');
+    if (!instructionsBar) return;
+    
+    const width = window.innerWidth;
+    
+    // Desktop instructions (width > 768px)
+    if (width > 768) {
+        instructionsBar.innerHTML = `
+            <div class="instructions-desktop">
+                <div class="instruction-item">
+                    <span class="instruction-icon">➕</span>
+                    <span class="instruction-text">Click "Add Card" to create tasks</span>
+                </div>
+                <div class="instruction-item">
+                    <span class="instruction-icon">🖱️</span>
+                    <span class="instruction-text">Drag cards between columns</span>
+                </div>
+                <div class="instruction-item">
+                    <span class="instruction-icon">✖️</span>
+                    <span class="instruction-text">Click × to delete</span>
+                </div>
+                <div class="instruction-item">
+                    <span class="instruction-icon">🗑️</span>
+                    <span class="instruction-text">Drag to trash bin</span>
+                </div>
+            </div>
+        `;
+    }
+    // Tablet instructions (481px - 768px)
+    else if (width > 480) {
+        instructionsBar.innerHTML = `
+            <div class="instructions-tablet">
+                <div class="tablet-instruction">
+                    <span class="instruction-icon">➕</span>
+                    <span class="instruction-text">Tap "Add Card" to create</span>
+                </div>
+                <div class="tablet-instruction">
+                    <span class="instruction-icon">👆</span>
+                    <span class="instruction-text">Drag cards sideways to move</span>
+                </div>
+                <div class="tablet-instruction">
+                    <span class="instruction-icon">✖️</span>
+                    <span class="instruction-text">Tap × to delete</span>
+                </div>
+                <div class="tablet-instruction">
+                    <span class="instruction-icon">📜</span>
+                    <span class="instruction-text">Scroll to see all tasks</span>
+                </div>
+            </div>
+        `;
+    }
+    // Mobile instructions (width <= 480px)
+    else {
+        instructionsBar.innerHTML = `
+            <div class="instructions-mobile">
+                <div class="mobile-instruction">
+                    <span class="instruction-icon">➕</span>
+                    <span class="instruction-text">Tap "Add Card" to make a new task</span>
+                </div>
+                <div class="mobile-instruction">
+                    <span class="instruction-icon">👆➡️</span>
+                    <span class="instruction-text">Tap & hold, then drag sideways to move tasks</span>
+                </div>
+                <div class="mobile-instruction">
+                    <span class="instruction-icon">✖️</span>
+                    <span class="instruction-text">Tap the × button to delete a task</span>
+                </div>
+                <div class="mobile-instruction">
+                    <span class="instruction-icon">📜</span>
+                    <span class="instruction-text">Scroll up/down to see all your tasks</span>
+                </div>
+            </div>
+        `;
+    }
+}
+
 // ==================== Card Functions ====================
 
 function attachCardEvents(card) {
@@ -590,6 +669,10 @@ function init() {
     
     // Load saved data
     loadState();
+    
+    // Set up context-aware instructions
+    updateInstructions();
+    window.addEventListener('resize', updateInstructions);
     
     // Modal event listeners
     closeBtn.onclick = closeModal;

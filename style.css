@@ -107,30 +107,88 @@ body {
     font-size: 0.875rem;
 }
 
-/* Instructions Bar */
+/* Instructions Bar - Friendly & Context-Aware */
 .instructions-bar {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 16px;
-    padding: 0.75rem 1.5rem;
+    padding: 1rem 1.5rem;
     margin-bottom: 1.5rem;
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    flex-wrap: wrap;
-    font-size: 0.875rem;
-    color: #495057;
     border: 1px solid rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
 }
 
-.instruction {
+/* Desktop instructions (3 columns) */
+.instructions-desktop {
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.instruction-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 50px;
+    font-size: 0.9rem;
+    color: #2c3e50;
 }
 
 .instruction-icon {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
+}
+
+.instruction-text {
+    font-weight: 500;
+}
+
+/* Mobile instructions (compact, friendly) */
+.instructions-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mobile-instruction {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    color: #2c3e50;
+    border-left: 3px solid #667eea;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 8px;
+}
+
+.mobile-instruction .instruction-icon {
+    font-size: 1.1rem;
+}
+
+.mobile-instruction .instruction-text {
+    flex: 1;
+}
+
+/* Tablet instructions (grid layout) */
+.instructions-tablet {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.tablet-instruction {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    color: #2c3e50;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 8px;
+    text-align: left;
 }
 
 /* Columns Layout */
@@ -296,13 +354,6 @@ body {
     position: relative;
     border: 1px solid #e9ecef;
     cursor: grab;
-}
-
-/* Disable grab cursor on mobile to prevent confusion with scrolling */
-@media (max-width: 768px) {
-    .card {
-        cursor: default;
-    }
 }
 
 .card:active {
@@ -827,14 +878,6 @@ body {
         margin-left: 0;
     }
     
-    .instructions-bar {
-        gap: 0.75rem;
-        padding: 0.75rem;
-        font-size: 0.75rem;
-        flex-direction: column;
-        align-items: center;
-    }
-    
     .columns {
         flex-direction: column;
         overflow-x: visible;
@@ -927,7 +970,7 @@ body {
     }
 }
 
-/* Touch Device Optimization - Disable drag visual effects on mobile */
+/* Touch Device Optimization */
 @media (hover: none) and (pointer: coarse) {
     .card {
         cursor: default;
