@@ -35,10 +35,17 @@ let trashItems = [];
 let currentColumn = null;
 let draggedElement = null;
 
-// Detect if device is mobile/touch
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                 ('ontouchstart' in window) || 
-                 (navigator.maxTouchPoints > 0);
+// Touch drag state for mobile (with scroll detection)
+let touchStartX = 0;
+let touchStartY = 0;
+let touchDraggedCard = null;
+let touchDragActive = false;
+let touchClone = null;
+let touchCurrentColumn = null;
+let touchDropTarget = null;
+let isScrolling = false;
+let dragThresholdMet = false;
+const DRAG_THRESHOLD = 10; // pixels to move before starting drag
 
 // ==================== Helper Functions ====================
 
@@ -58,14 +65,17 @@ function updateProgressBars() {
     const doneCount = doneColumn.querySelectorAll('.card').length;
     const totalCount = todoCount + inprogressCount + doneCount;
     
+    // Update To Do
     const todoPercent = totalCount > 0 ? (todoCount / totalCount) * 100 : 0;
     if (todoProgressBar) todoProgressBar.style.width = todoPercent + '%';
     if (todoProgressText) todoProgressText.textContent = `${Math.round(todoPercent)}%`;
     
+    // Update In Progress
     const inprogressPercent = totalCount > 0 ? (inprogressCount / totalCount) * 100 : 0;
     if (inprogressProgressBar) inprogressProgressBar.style.width = inprogressPercent + '%';
     if (inprogressProgressText) inprogressProgressText.textContent = `${Math.round(inprogressPercent)}%`;
     
+    // Update Done
     const donePercent = totalCount > 0 ? (doneCount / totalCount) * 100 : 0;
     if (doneProgressBar) doneProgressBar.style.width = donePercent + '%';
     if (doneProgressText) doneProgressText.textContent = `${Math.round(donePercent)}%`;
@@ -133,6 +143,7 @@ function loadState() {
             doneColumn.innerHTML = state.done || '';
             trashItems = state.trash ? JSON.parse(state.trash) : [];
             
+            // Reattach event listeners to all cards
             document.querySelectorAll('.card').forEach(card => {
                 attachCardEvents(card);
             });
@@ -152,15 +163,17 @@ function loadState() {
 // ==================== Card Functions ====================
 
 function attachCardEvents(card) {
-    // Only enable drag on desktop devices
-    if (!isMobile) {
-        card.setAttribute('draggable', 'true');
-        card.addEventListener('dragstart', dragStart);
-        card.addEventListener('dragend', dragEnd);
-    } else {
-        card.setAttribute('draggable', 'false');
-    }
+    // Mouse events for desktop
+    card.setAttribute('draggable', 'true');
+    card.addEventListener('dragstart', dragStart);
+    card.addEventListener('dragend', dragEnd);
     
+    // Touch events for mobile (with scroll detection)
+    card.addEventListener('touchstart', touchDragStart, { passive: false });
+    card.addEventListener('touchmove', touchDragMove, { passive: false });
+    card.addEventListener('touchend', touchDragEnd);
+    
+    // Ensure delete button exists and has correct event
     let deleteBtn = card.querySelector('.card-delete-btn');
     if (!deleteBtn) {
         deleteBtn = document.createElement('button');
@@ -187,13 +200,7 @@ function findCardColumn(card) {
 function createCardElement(title, timestamp = null) {
     const card = document.createElement('div');
     card.className = 'card';
-    
-    if (!isMobile) {
-        card.draggable = true;
-    } else {
-        card.draggable = false;
-    }
-    
+    card.draggable = true;
     card.innerHTML = `
         <h3>${escapeHtml(title)}</h3>
         <p>Added on ${timestamp || new Date().toLocaleDateString()}</p>
@@ -242,7 +249,7 @@ function deleteCard(cardElement, columnId) {
     updateTrashPageDisplay();
 }
 
-// ==================== Desktop Drag & Drop Only ====================
+// ==================== Desktop Drag & Drop ====================
 
 function dragStart(e) {
     draggedElement = e.target.closest('.card');
@@ -263,8 +270,6 @@ function dragEnd(e) {
 }
 
 function makeColumnDroppable(columnElement, columnId) {
-    if (isMobile) return; // Skip drop zones on mobile
-    
     columnElement.addEventListener('dragover', function(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
@@ -288,8 +293,6 @@ function makeColumnDroppable(columnElement, columnId) {
 }
 
 function makeTrashZoneDroppable() {
-    if (isMobile) return; // Skip trash drop zone on mobile
-    
     const trashZone = document.getElementById('trash-drop-zone');
     
     trashZone.addEventListener('dragover', function(e) {
@@ -311,6 +314,160 @@ function makeTrashZoneDroppable() {
             if (column) deleteCard(draggedElement, column);
         }
     });
+}
+
+// ==================== Mobile Touch Drag & Drop (with scroll prioritization) ====================
+
+function touchDragStart(e) {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    
+    // Don't start drag if delete button was tapped
+    if (e.target.classList.contains('card-delete-btn')) return;
+    
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchDraggedCard = card;
+    touchDragActive = false; // Not active until threshold met
+    isScrolling = false;
+    dragThresholdMet = false;
+}
+
+function touchDragMove(e) {
+    if (!touchDraggedCard) return;
+    
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartX);
+    const deltaY = Math.abs(touch.clientY - touchStartY);
+    
+    // Check if user is trying to scroll vertically
+    if (!isScrolling && !dragThresholdMet) {
+        if (deltaY > DRAG_THRESHOLD && deltaY > deltaX) {
+            // User is scrolling vertically - let scrolling happen
+            isScrolling = true;
+            touchDraggedCard = null;
+            return;
+        }
+        
+        // If horizontal movement exceeds threshold, start drag
+        if (deltaX > DRAG_THRESHOLD && deltaX > deltaY) {
+            dragThresholdMet = true;
+            touchDragActive = true;
+            isScrolling = false;
+            e.preventDefault();
+            
+            // Start the drag
+            touchCurrentColumn = findCardColumn(touchDraggedCard);
+            
+            // Add dragging class and create clone for visual feedback
+            touchDraggedCard.classList.add('dragging');
+            
+            // Create a clone of the card for visual feedback during drag
+            touchClone = touchDraggedCard.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.top = `${touch.clientY}px`;
+            touchClone.style.left = `${touch.clientX}px`;
+            touchClone.style.width = `${touchDraggedCard.offsetWidth}px`;
+            touchClone.style.opacity = '0.8';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.zIndex = '9999';
+            touchClone.style.transform = 'translate(-50%, -50%)';
+            touchClone.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
+            document.body.appendChild(touchClone);
+            
+            // Hide original card but keep its space
+            touchDraggedCard.style.opacity = '0.3';
+            
+            // Add visual indicators for drop targets
+            document.querySelectorAll('.column-content').forEach(col => {
+                col.classList.add('drag-target-ready');
+            });
+            document.getElementById('trash-drop-zone').classList.add('drag-target-ready');
+        }
+    }
+    
+    // If drag is active, move the clone and find drop targets
+    if (touchDragActive && touchClone) {
+        e.preventDefault();
+        
+        // Move the clone
+        touchClone.style.top = `${touch.clientY}px`;
+        touchClone.style.left = `${touch.clientX}px`;
+        
+        // Find drop target under finger
+        const elementAtCursor = document.elementFromPoint(touch.clientX, touch.clientY);
+        const columnContent = elementAtCursor?.closest('.column-content');
+        const trashZone = elementAtCursor?.closest('#trash-drop-zone');
+        
+        // Remove highlight from all targets
+        document.querySelectorAll('.column-content, #trash-drop-zone').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+        
+        // Add highlight to current target
+        if (columnContent) {
+            columnContent.classList.add('drag-over');
+            touchDropTarget = columnContent;
+        } else if (trashZone) {
+            trashZone.classList.add('drag-over');
+            touchDropTarget = trashZone;
+        } else {
+            touchDropTarget = null;
+        }
+    }
+}
+
+function touchDragEnd(e) {
+    // Clean up clone regardless
+    if (touchClone) {
+        touchClone.remove();
+        touchClone = null;
+    }
+    
+    // Process drop only if drag was active (not a scroll)
+    if (touchDragActive && touchDraggedCard) {
+        e.preventDefault();
+        
+        // Reset original card appearance
+        touchDraggedCard.style.opacity = '1';
+        touchDraggedCard.classList.remove('dragging');
+        
+        // Process drop if there's a valid target
+        if (touchDropTarget) {
+            const isTrashZone = touchDropTarget.id === 'trash-drop-zone';
+            
+            if (isTrashZone) {
+                // Delete the card
+                if (touchCurrentColumn) {
+                    deleteCard(touchDraggedCard, touchCurrentColumn);
+                }
+            } else {
+                // Move to new column
+                const targetColumn = touchDropTarget.closest('.column');
+                if (targetColumn) {
+                    touchDropTarget.appendChild(touchDraggedCard);
+                    saveState();
+                    updateProgressBars();
+                }
+            }
+        }
+    }
+    
+    // Remove visual indicators
+    document.querySelectorAll('.column-content, #trash-drop-zone').forEach(el => {
+        el.classList.remove('drag-over', 'drag-target-ready');
+    });
+    
+    // Reset all touch state
+    touchDraggedCard = null;
+    touchDragActive = false;
+    touchCurrentColumn = null;
+    touchDropTarget = null;
+    isScrolling = false;
+    dragThresholdMet = false;
+    touchStartX = 0;
+    touchStartY = 0;
 }
 
 // ==================== Trash Functions ====================
@@ -425,13 +582,11 @@ function closeModal() {
 // ==================== Initialization ====================
 
 function init() {
-    // Only make columns droppable for desktop
-    if (!isMobile) {
-        makeColumnDroppable(todoColumn, 'todo');
-        makeColumnDroppable(inprogressColumn, 'inprogress');
-        makeColumnDroppable(doneColumn, 'done');
-        makeTrashZoneDroppable();
-    }
+    // Make columns droppable for desktop
+    makeColumnDroppable(todoColumn, 'todo');
+    makeColumnDroppable(inprogressColumn, 'inprogress');
+    makeColumnDroppable(doneColumn, 'done');
+    makeTrashZoneDroppable();
     
     // Load saved data
     loadState();
@@ -474,12 +629,7 @@ function init() {
         }
     };
     
-    // Log initialization status
-    if (isMobile) {
-        console.log('KanFlow running on mobile - Drag disabled, scrolling optimized');
-    } else {
-        console.log('KanFlow running on desktop - Full drag & drop enabled');
-    }
+    console.log('KanFlow initialized - Drag & drop works on all devices with enhanced scrolling!');
 }
 
 // Start the app
