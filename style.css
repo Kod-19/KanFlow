@@ -354,6 +354,7 @@ body {
     position: relative;
     border: 1px solid #e9ecef;
     cursor: grab;
+    touch-action: pan-y;
 }
 
 .card:active {
@@ -376,7 +377,7 @@ body {
     font-weight: 600;
     color: #212529;
     margin: 0 0 0.5rem 0;
-    padding-right: 2rem;
+    padding-right: 2.25rem;
     word-break: break-word;
 }
 
@@ -386,8 +387,27 @@ body {
     margin: 0;
 }
 
-/* Card Delete Button */
-.card-delete-btn {
+.card-meta {
+    margin-top: 0.375rem;
+}
+
+.card-description {
+    font-size: 0.8125rem;
+    color: #495057;
+    margin: 0.25rem 0 0.5rem 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.card-due {
+    font-size: 0.75rem;
+    color: #0f766e;
+    margin: 0.25rem 0 0 0;
+    font-weight: 600;
+}
+
+/* Card Options */
+.card-options-btn {
     position: absolute;
     top: 0.75rem;
     right: 0.75rem;
@@ -396,32 +416,67 @@ body {
     border-radius: 50%;
     background: #f8f9fa;
     border: 1px solid #dee2e6;
-    color: #dc3545;
-    font-size: 1.25rem;
+    color: #495057;
+    font-size: 1rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    opacity: 0.7;
+    opacity: 0.95;
 }
 
 /* Make delete button easier to tap on mobile */
 @media (max-width: 768px) {
-    .card-delete-btn {
+    .card-options-btn {
         width: 36px;
         height: 36px;
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         opacity: 1;
     }
 }
 
-.card-delete-btn:hover {
-    background: #dc3545;
+.card-options-btn:hover {
+    background: #667eea;
     color: white;
-    border-color: #dc3545;
+    border-color: #667eea;
     opacity: 1;
     transform: scale(1.05);
+}
+
+.card-options-menu {
+    position: static;
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-top: 0.625rem;
+}
+
+.card-options-menu.open {
+    display: flex;
+}
+
+.card-menu-item {
+    border: none;
+    background: white;
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8125rem;
+    color: #212529;
+    cursor: pointer;
+}
+
+.card-menu-item:hover {
+    background: #f8f9fa;
+}
+
+.card-menu-item.danger {
+    color: #c92a2a;
 }
 
 /* Add Card Button */
@@ -539,11 +594,30 @@ body {
     border-color: #667eea;
 }
 
+.modal-body textarea {
+    width: 100%;
+    padding: 0.875rem;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 0.9375rem;
+    transition: border-color 0.2s;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    margin-bottom: 0.75rem;
+}
+
+.modal-body textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
 .modal-footer {
     padding: 1rem 1.5rem 1.5rem;
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
+    flex-wrap: wrap;
 }
 
 .cancel-btn {
@@ -576,6 +650,23 @@ body {
 .save-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.clear-btn {
+    padding: 0.625rem 1rem;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #c2410c;
+    margin-right: auto;
+    transition: all 0.2s;
+}
+
+.clear-btn:hover {
+    background: #ffedd5;
 }
 
 /* Trash Drop Zone */
@@ -844,6 +935,10 @@ body {
 .column-content.dragover {
     background: rgba(102, 126, 234, 0.1);
     border-radius: 12px;
+}
+
+.column-content.drag-target-ready {
+    transition: background-color 0.15s ease;
 }
 
 /* Responsive Design */

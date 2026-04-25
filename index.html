@@ -7,6 +7,7 @@
     <title>KanFlow - Modern Kanban Board</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="icon" href="favicon.png" type="image/x-icon">
 </head>
 
 <body>
@@ -157,10 +158,15 @@
             <div class="modal-body">
                 <label for="card-input">Task Title</label>
                 <input type="text" id="card-input" placeholder="e.g., Complete project report, Review pull request..." autocomplete="off">
+                <label for="card-description">Task Description</label>
+                <textarea id="card-description" rows="4" placeholder="Add extra notes, context, or checklist details..."></textarea>
+                <label for="card-due-time">Due Date &amp; Time</label>
+                <input type="datetime-local" id="card-due-time">
             </div>
             <div class="modal-footer">
+                <button id="clear-due-btn" class="clear-btn">Clear Due Time</button>
                 <button id="cancel-modal" class="cancel-btn">Cancel</button>
-                <button id="save-card" class="save-btn">Create Task</button>
+                <button id="save-card" class="save-btn">Save Task</button>
             </div>
         </div>
     </div>
